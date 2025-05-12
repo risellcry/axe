@@ -86,7 +86,14 @@ int main()
 				puts("ERROR: Project Name cannot contains character \\, /, :, *, ?, \", <, > or |.");
 				continue;
 			}
-
+			engine.pixels.clear();
+			engine.chars.clear();
+			engine.variables.clear();
+			engine.events.clear();
+			engine.current_event = -1;
+			engine.current_pixel = -1;
+			engine.current_char = -1;
+			engine.current_variable = -1;
 			ifstream check(query + ".axe");
 			if (check.is_open())
 			{
@@ -129,6 +136,14 @@ int main()
 				puts("ERROR: Project Name cannot contains character \\, /, :, *, ?, \", <, > or |.");
 				continue;
 			}
+			engine.pixels.clear();
+			engine.chars.clear();
+			engine.variables.clear();
+			engine.events.clear();
+			engine.current_event = -1;
+			engine.current_pixel = -1;
+			engine.current_char = -1;
+			engine.current_variable = -1;
 			ifstream project(query + ".axe");
 			if (!project.is_open())
 			{
@@ -195,7 +210,7 @@ int main()
 			if (query == "objects")
 			{
 				puts("PIXELS:");
-				int i;
+				int i = 0;
 				for (auto pixel : engine.pixels)
 				{
 					puts(pixel.first.c_str());
@@ -265,7 +280,7 @@ int main()
 							continue;
 						}
 					}
-					vector<pair<string, string>> event = engine.events[i];
+					auto event = engine.events[i];
 					puts(event.first.c_str());
 					puts(event.second.c_str());
 					continue;
@@ -384,11 +399,6 @@ int main()
 				puts("ERROR: Use of \"attach\" before \"new\" or \"open\".");
 				continue;
 			}
-			if (object == "")
-			{
-				puts("ERROR: Use of \"attach\" before \"select\".");
-				continue;
-			}
 			query.replace(0, 7, "");
 			string expression = query;
 			if (expression.find(":") != string::npos)
@@ -397,35 +407,28 @@ int main()
 				string subject;
 				string sign;
 				string object;
-				while (expression.find(" ") != string::npos)
+				try
 				{
-					if (subject == "")
-					{
-						subject = expression;
-						subject.replace(subject.find_first_of(" "), subject.length() - subject.find_first_of(" "), "");
-						expression.replace(0, subject.length() + 1, "");
-						continue;
-					}
-					if (sign == "")
-					{
-						sign = expression;
-						sign.replace(sign.find_first_of(" "), sign.length() - sign.find_first_of(" "), "");
-						expression.replace(0, sign.length() + 1, "");
-						continue;
-					}
-					if (object == "")
-					{
-						object = expression;
-						break;
-					}
+					subject = expression;
+					subject.replace(subject.find_first_of(" "), subject.length() - subject.find_first_of(" "), "");
+					expression.replace(0, subject.length() + 1, "");
+					sign = expression;
+					sign.replace(sign.find_first_of(" "), sign.length() - sign.find_first_of(" "), "");
+					expression.replace(0, sign.length() + 1, "");
+					object = expression;
+					query.replace(0, subject.length() + 1 + sign.length() + 1 + object.length() + 1, "");
+				}
+				catch (exception error)
+				{
+					puts("ERROR: Syntax Error for \"attach\".");
+					continue;
 				}
 				if (sign != "==" and sign != "!=" and sign != ">" and sign != "<" and sign != ">=" and sign != "<=")
 				{
 					puts("ERROR: Invalid Sign.");
 					continue;
-				}
-				query.replace(0, expression.length() + 1, "");
-				string event = query;
+				}	
+				string action = query;
 				string type;
 				string type_2;
 				for (auto pixel : engine.pixels)
@@ -530,7 +533,7 @@ int main()
 					continue;
 				}
 				engine.current_event++;
-				engine.events.push_back(make_pair(subject + " " + sign + " " + object, event));
+				engine.events.push_back(make_pair(subject + " " + sign + " " + object, action));
 				printf("EXPRESSION-AND-EVENT-ID: %i\n", engine.current_event);
 				continue;
 			}
@@ -543,11 +546,6 @@ int main()
 			if (file == "<NULL>")
 			{
 				puts("ERROR: Use of \"detach\" before \"new\" or \"open\".");
-				continue;
-			}
-			if (object == "")
-			{
-				puts("ERROR: Use of \"detach\" before \"select\".");
 				continue;
 			}
 			try
@@ -686,12 +684,30 @@ int main()
 				raw += ";\n";
 			}
 			raw += ":\n";
+			raw += "-chrs\n";
+			for (auto _char : engine.chars)
+			{
+				raw += "=" + _char.first + "\n";
+				raw += _char.second.first + "\n";
+				raw += to_string(_char.second.second.first) + "\n";
+				raw += to_string(_char.second.second.second) + "\n";
+				raw += ";\n";
+			}
+			raw += ":\n";
 			raw += "-vrls\n";
 			for (auto variable : engine.variables)
 			{
 				raw += variable.first + ">" + variable.second + "\n";
 			}
 			raw += ":\n";
+			raw += "-evts\n";
+			for (auto event : engine.events)
+			{
+				raw += "=" + event.first + "\n";
+				raw += event.second + "\n";
+				raw += ";\n";
+			}
+			raw += ":";
 			file << raw;
 			file.close();
 			continue;
@@ -714,13 +730,11 @@ int main()
 				continue;
 			}
 			vector<string> lines;
-			int current_line;
 			string line;
 			while (project.good())
 			{
 				getline(project, line);
 				lines.push_back(line);
-				current_line++;
 			}	
 			for (auto line : lines)
 			{
@@ -738,10 +752,14 @@ int main()
 				vector<pair<char, pair<int, int>>> chars_prj;
 				for (auto pixel : engine.pixels)
 				{
+					if (pixel.second.first == false)
+					{
+						continue;
+					}
 					pixels_prj.push_back(make_pair(pixel.second.second.first, pixel.second.second.second));
 				}
 				for (auto _char : engine.chars)
-				{	
+				{
 					chars_prj.push_back(make_pair(_char.second.first, make_pair(_char.second.second.first, _char.second.second.second)));
 				}
 				if (prevents > 0)
@@ -755,7 +773,7 @@ int main()
 					{
 						try
 						{
-							if (current < -1 or current > pixels_prj.size())
+							if (current < -1 or current > pixels_prj.size() or pixels_prj.size() == 0)
 							{
 								throw exception();
 							}
@@ -770,7 +788,7 @@ int main()
 						{
 							try
 							{
-								if (current < -1 or current > chars_prj.size())
+								if (current < -1 or current > chars_prj.size() or chars_prj.size() == 0)
 								{
 									throw exception();
 								}
@@ -800,7 +818,7 @@ int main()
 				{
 					if (engine.current_event >= i)
 					{
-						engine.act(engine.events[i]);
+						engine.act(i);
 					}
 				}
 				#if defined(UNIX) and !defined(WIN32)

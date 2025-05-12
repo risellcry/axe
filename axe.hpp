@@ -18,13 +18,16 @@ class axe
 		int current_char = -1;
 		int current_variable = -1;
 		int count = 0;
+		string object;
 		string pxl_name;
 		string pxl_visible;
 		string pxl_x;
 		string pxl_y;
+		string evt_expression;
 		bool in_pxls_header = false;
 		bool in_chrs_header = false;
 		bool in_vrls_header = false;
+		bool in_evts_header = false;
 		bool in_sub_header = false;
 		void create(string type, string name)
 		{
@@ -35,16 +38,106 @@ class axe
 			}
 			if (type == "pixel")
 			{
+				bool founded = false;
+				for (auto pixel : pixels)
+				{
+					if (name == pixel.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				for (auto _char : chars)
+				{
+					if (name == _char.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				for (auto variable : variables)
+				{
+					if (name == variable.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				if (founded == true or name == "")
+				{
+					puts("ERROR: Cannot use the same Name as other Pixel/Character/Variable or cannot use the null Name.");
+					return;
+				}
 				pixels.push_back(make_pair(name, make_pair(true, make_pair(0, 0))));
 				current_pixel++;
 			}
 			else if (type == "char")
 			{
+				bool founded = false;
+				for (auto pixel : pixels)
+				{
+					if (name == pixel.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				for (auto _char : chars)
+				{
+					if (name == _char.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				for (auto variable : variables)
+				{
+					if (name == variable.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				if (founded == true or name == "")
+				{
+					puts("ERROR: Cannot use the same Name as other Pixel/Character/Variable or Cannot use the null Name.");
+					return;
+				}
 				chars.push_back(make_pair(name, make_pair('a', make_pair(0, 0))));
 				current_char++;
 			}
 			else if (type == "variable")
 			{
+				bool founded = false;
+				for (auto pixel : pixels)
+				{
+					if (name == pixel.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				for (auto _char : chars)
+				{
+					if (name == _char.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				for (auto variable : variables)
+				{
+					if (name == variable.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				if (founded == true or name == "")
+				{
+					puts("ERROR: Cannot use the same Name as other Pixel/Character/Variable or cannot use the null Name.");
+					return;
+				}
 				variables.push_back(make_pair(name, ""));
 				current_variable++;
 			}
@@ -55,7 +148,7 @@ class axe
 			if (command.compare(0, string("-").length(), "-") == 0)
 			{
 				command.replace(0, 1, "");
-				if (command != "pxls" and command != "chrs" and command != "vrls")
+				if (command != "pxls" and command != "chrs" and command != "vrls" and command != "evts")
 				{
 					puts("ERROR: Invalid Header.");
 					return;
@@ -72,11 +165,15 @@ class axe
 				{
 					in_vrls_header = true;
 				}
+				else if (command == "evts")
+				{
+					in_evts_header = true;
+				}
 				return;
 			}
 			else if (command.compare(0, string("=").length(), "=") == 0)
 			{
-				if (in_pxls_header == false and in_chrs_header == false)
+				if (in_pxls_header == false and in_chrs_header == false and in_evts_header == false)
 				{
 					puts("ERROR: Invalid use for \"=\".");
 					return;
@@ -87,10 +184,19 @@ class axe
 				{
 					pxl_name = command;
 				}
+				if (in_evts_header == true)
+				{
+					evt_expression = command;
+				}
 				return;
 			}
 			else if (command.compare(0, string(":").length(), ":") == 0)
 			{
+				if (in_pxls_header == false and in_chrs_header == false and in_vrls_header == false and in_evts_header == false)
+				{
+					puts("ERROR: Use of \":\" before \"-\".");
+					return;
+				}
 				if (in_sub_header == true)
 				{
 					puts("ERROR: Use of \":\" while in \"=\".");
@@ -99,6 +205,7 @@ class axe
 				in_pxls_header = false;
 				in_chrs_header = false;
 				in_vrls_header = false;
+				in_evts_header = false;
 				return;
 			}
 			else if (command.compare(0, string(";").length(), ";") == 0)
@@ -111,7 +218,7 @@ class axe
 				in_sub_header = false;
 				return;
 			}
-			if (in_sub_header == false and in_vrls_header == false and in_pxls_header == false and in_chrs_header == false)
+			if (in_sub_header == false and in_vrls_header == false and in_pxls_header == false and in_chrs_header == false and in_evts_header == false)
 			{
 				return;
 			}
@@ -158,6 +265,11 @@ class axe
 					return;
 				}
 			}
+			else if (in_sub_header == true and in_evts_header == true)
+			{
+				events.push_back(make_pair(evt_expression, command));
+				return;
+			}
 			else if (in_vrls_header == true)
 			{
 				string name = command;
@@ -168,6 +280,65 @@ class axe
 				current_variable++;
 			}
 			return;
+		}
+		bool run(string query)
+		{
+			if (query.compare(0, string("set ").length(), "set ") == 0)
+			{
+				try
+				{
+					query.replace(0, 4, "");
+					string variable = query;
+					variable.replace(variable.find_first_of(" "), variable.length() - variable.find_first_of(" "), "");
+					query.replace(0, variable.length() + 1, "");
+					string value = query;
+					int i;
+					bool founded = false;
+					for (auto _variable : variables)
+					{
+						if (variable == _variable.first)
+						{
+							founded = true;
+							break;
+						}
+						i++;
+					}
+					if (founded == false)
+					{
+						puts("ERROR: Invalid Variable.");
+						return false;
+					}
+					variables[i].second = value;
+				}
+				catch (exception error)
+				{
+					puts("ERROR: Syntax Error for \"set\".");
+					return false;
+				}
+				return true;
+			}
+			if (query.compare(0, string("select ").length(), "select ") == 0)
+			{
+				query.replace(0, 7, "");
+				bool founded = false;
+				for (auto pixel : pixels)
+				{
+					if (query == pixel.first)
+					{
+						founded = true;
+						break;
+					}
+				}
+				if (founded == false)
+				{
+					puts("ERROR: Invalid Pixel/Character/Variable");
+					return false;
+				}
+				object = query;
+				return true;
+			}
+			puts("ERROR: Invalid Query.");
+			return false;
 		}
 		bool act(int index)
 		{
@@ -187,6 +358,8 @@ class axe
 				puts("ERROR: Invalid Expression.");
 				return false;
 			}
+			int first_i;
+			int second_i;
 			int first_type = 0;
 			for (auto pixel : pixels)
 			{
@@ -195,6 +368,7 @@ class axe
 					first_type = 1;
 					break;
 				}
+				first_i++;
 			}
 			if (first_type == 0)
 			{
@@ -205,6 +379,7 @@ class axe
 						first_type = 2;
 						break;
 					}
+					first_i++;
 				}
 				if (first_type == 0)
 				{
@@ -214,6 +389,7 @@ class axe
 						{
 							first_type = 3;
 						}
+						first_i++;
 					}
 				}
 			}
@@ -235,6 +411,7 @@ class axe
 					second_type = 1;
 					break;
 				}
+				second_i++;
 			}
 			if (second_type == 0)
 			{
@@ -250,6 +427,7 @@ class axe
 						second_type = 2;
 						break;
 					}
+					second_i++;
 				}
 				if (second_type == 0)
 				{
@@ -265,6 +443,7 @@ class axe
 							second_type = 3;
 							break;
 						}
+						second_i++;
 					}
 				}
 			}
@@ -272,6 +451,100 @@ class axe
 			{
 				puts("ERROR: Invalid Pixel/Character/Variable.");
 				return false;
+			}
+			if (tokens[1] != "==" and tokens[1] != "!=" and tokens[1] != ">" and tokens[1] != ">=" and tokens[1] != "<" and tokens[1] != "<=")
+			{
+				puts("ERROR: Invalid Operator.");
+				return false;
+			}
+			if (first_type == 1)
+			{
+				if (tokens[1] == "==")
+				{
+					if (pixels[first_i].second.first == pixels[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == "!=")
+				{
+					if (pixels[first_i].second.first != pixels[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == ">")
+				{
+					if (pixels[first_i].second.first > pixels[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == ">=")
+				{
+					if (pixels[first_i].second.first >= pixels[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == "<")
+				{
+					if (pixels[first_i].second.first < pixels[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == "<=")
+				{
+					if (pixels[first_i].second.first <= pixels[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+			}
+			if (first_type == 2)
+			{
+				if (tokens[1] == "==")
+				{
+					if (chars[first_i].second.first == chars[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == "!=")
+				{
+					if (chars[first_i].second.first != chars[second_i].second.first)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == ">" or tokens[1] == ">=" or tokens[1] == "<" or tokens[1] == "<=")
+				{
+					puts("ERROR: Cannot use operator >, >=, < or <= to compare Characters.");
+					return false;
+				}
+			}
+			if (first_type == 3)
+			{
+				if (tokens[1] == "==")
+				{
+					if (variables[first_i].second == variables[second_i].second)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == "!=")
+				{
+					if (variables[first_i].second != variables[second_i].second)
+					{
+						run(action);
+					}
+				}
+				if (tokens[1] == ">" or tokens[1] == ">=" or tokens[1] == "<" or tokens[1] == "<=")
+				{
+					puts("ERROR: Cannot use operator >, >=, < or <= to compare Variables.");
+					return false;
+				}
 			}
 			return true;
 		}
