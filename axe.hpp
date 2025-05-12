@@ -329,12 +329,66 @@ class axe
 						break;
 					}
 				}
+				for (auto _char : chars)
+				{
+					if (query == _char.first)
+					{
+						founded = true;
+						break;
+					}
+				}
 				if (founded == false)
 				{
-					puts("ERROR: Invalid Pixel/Character/Variable");
+					puts("ERROR: Invalid Object.");
 					return false;
 				}
 				object = query;
+				return true;
+			}
+			if (query.compare(0, string("change ").length(), "change ") == 0)
+			{
+				query.replace(0, 7, "");
+				if (object == "")
+				{
+					puts("ERROR: Use of \"change\" before \"select\".");
+					return false;
+				}
+				string property = query;
+				property.replace(property.find_first_of(" "), property.length() - property.find_first_of(" "), "");
+				query.replace(0, property.length() + 1, "");
+				string value = query;
+				bool is_pixel = false;
+				int i = 0;
+				for (auto pixel : pixels)
+				{
+					if (object == pixel.first)
+					{
+						is_pixel = true;
+						break;
+					}
+					i++;
+				}
+				if (is_pixel == false)
+				{
+					i = 0;
+					for (auto _char : chars)
+					{
+						break;
+					}
+					i++;
+				}
+				if (is_pixel == false)
+				{
+					if (property == "key")
+					{
+						if (value.size() > 1)
+						{
+							puts("ERROR: Invalid Character.");
+							return false;
+						}
+						chars[i].second.first = value[0];
+					}
+				}
 				return true;
 			}
 			puts("ERROR: Invalid Query.");

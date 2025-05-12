@@ -59,12 +59,10 @@ int main()
 			puts(" * change [property-name] [value] << Change Property (String/Any)");
 			puts(" * exit << Exit Application");
 			puts("< PIXEL PROPERTIES >");
-			puts(" * name << Object Name (String)");
 			puts(" * x << X Position [Integer(0-15)]");
 			puts(" * y << Y Position [Integer(0-15)]");
 			puts(" * visible << Is Pixel Visble (Boolean)");
 			puts("< CHAR PROPERTIES >");
-			puts(" * name << Object Name (String)");
 			puts(" * x << X Position [Integer(0-15)]");
 			puts(" * y << Y Position [Integer(0-15)]");
 			puts(" * key << Character Key (Character)");
