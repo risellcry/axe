@@ -354,8 +354,16 @@ class axe
 					return false;
 				}
 				string property = query;
-				property.replace(property.find_first_of(" "), property.length() - property.find_first_of(" "), "");
-				query.replace(0, property.length() + 1, "");
+				try
+				{
+					property.replace(property.find_first_of(" "), property.length() - property.find_first_of(" "), "");
+					query.replace(0, property.length() + 1, "");
+				}
+				catch (exception error)
+				{
+					puts("ERROR: Syntax Error for \"change\".");
+					return false;
+				}
 				string value = query;
 				bool is_pixel = false;
 				int i = 0;
@@ -387,6 +395,105 @@ class axe
 							return false;
 						}
 						chars[i].second.first = value[0];
+					}
+					else if (property == "x")
+					{
+						if (value.find(".") != string::npos)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+						try
+						{
+							int pos = stoi(value);
+							chars[i].second.second.first = pos;
+						}
+						catch (exception error)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+					}
+					else if (property == "y")
+					{
+						if (value.find(".") != string::npos)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+						try
+						{
+							int pos = stoi(value);
+							chars[i].second.second.second = pos;
+						}
+						catch (exception error)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+					}
+					else
+					{
+						puts("ERROR: Invalid Property.");
+						return false;
+					}
+				}
+				if (is_pixel == true)
+				{
+					if (property == "visible")
+					{
+						if (value != "true" and value != "false")
+						{
+							puts("ERROR: Invalid Boolean.");
+							return false;
+						}
+						bool visible = false;
+						if (value == "true")
+						{
+							visible = true;
+						}
+						chars[i].second.first = visible;
+					}
+					else if (property == "x")
+					{
+						if (value.find(".") != string::npos)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+						try
+						{
+							int pos = stoi(value);
+							chars[i].second.second.first = pos;
+						}
+						catch (exception error)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+					}
+					else if (property == "y")
+					{
+						if (value.find(".") != string::npos)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+						try
+						{
+							int pos = stoi(value);
+							chars[i].second.second.second = pos;
+						}
+						catch (exception error)
+						{
+							puts("ERROR: Invalid Integer.");
+							return false;
+						}
+					}
+					else
+					{
+						puts("ERROR: Invalid Property.");
+						return false;
 					}
 				}
 				return true;
