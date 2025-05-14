@@ -567,14 +567,14 @@ class axe
 				}
 				if (is_float == false)
 				{
-					for (int i = 0; i < stoi(query) * (2000 * wait_used); i++)
+					for (int i = 0; i < stoi(query) * (320 * wait_used); i++)
 					{
 						wait_used++;
 					}
 				}
 				if (is_float == true)
 				{
-					for (int i = 0; i < stoi(query) * (100 * wait_float_used); i++)
+					for (int i = 0; i < stoi(query) * (32 * wait_float_used); i++)
 					{
 						wait_float_used++;
 					}

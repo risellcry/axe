@@ -48,7 +48,7 @@ int main()
 			puts(" * new [project-name] << New Project (String)");
 			puts(" * open [project-name] << Open Project (String)");
 			puts(" * run [project-name] << Run Project (String)");
-			puts(" * news [1-6] << News (Integer)");
+			puts(" * news [1-7] << News (Integer)");
 			puts(" * features << Engine Features");
 			puts(" * about << About Engine");
 			puts(" * donate << Donate Creator");
@@ -200,7 +200,7 @@ int main()
 				puts("ERROR: Invalid Integer.");
 				continue;
 			}
-			if (stoi(query) < 1 or stoi(query) > 6)
+			if (stoi(query) < 1 or stoi(query) > 7)
 			{
 				puts("ERROR: Integer is Lower than 1 or Higher than 5.");
 				continue;
@@ -240,6 +240,11 @@ int main()
 			{
 				puts("< ALPHA 0.1.5 >");
 				puts(" * Fixed if statement in runtime");
+			}
+			if (stoi(query) == 7)
+			{
+				puts("< ALPHA 0.1.6 >");
+				puts(" * Fixed some Minor Bugs");
 			}
 			continue;
 		}
