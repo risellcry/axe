@@ -18,11 +18,16 @@ class axe
 		int current_char = -1;
 		int current_variable = -1;
 		int count = 0;
+		int count_chr = 0;
 		string object;
 		string pxl_name;
 		string pxl_visible;
 		string pxl_x;
 		string pxl_y;
+		string chr_name;
+		char chr_key;
+		string chr_x;
+		string chr_y;
 		string evt_expression;
 		bool in_pxls_header = false;
 		bool in_chrs_header = false;
@@ -184,7 +189,11 @@ class axe
 				{
 					pxl_name = command;
 				}
-				if (in_evts_header == true)
+				else if (in_chrs_header == true)
+				{
+					chr_name = command;
+				}
+				else if (in_evts_header == true)
 				{
 					evt_expression = command;
 				}
@@ -262,6 +271,44 @@ class axe
 						is_visible = true;
 					}
 					pixels.push_back(make_pair(pxl_name, make_pair(is_visible, make_pair(stoi(pxl_x), stoi(pxl_y)))));
+					return;
+				}
+			}
+			else if (in_sub_header == true and in_chrs_header == true)
+			{
+				count_chr++;
+				if (count_chr == 1)
+				{
+					if (command.length() > 1)
+					{
+						puts("ERROR: Invalid Character.");
+						return;
+					}
+					chr_key = command[0];
+				}
+				else if (count_chr == 2)
+				{
+					chr_x = command;
+				}
+				else if (count_chr == 3)
+				{
+					if (command.find(".") != string::npos)
+					{
+						puts("ERROR: Invalid Integer.");
+						return;
+					}
+					try
+					{
+						int check = stoi(command);
+					}
+					catch (exception error)
+					{
+						puts("ERROR: Invalid Integer.");
+						return;
+					}
+					chr_y = command;
+					count_chr = 0;
+					chars.push_back(make_pair(chr_name, make_pair(chr_key, make_pair(stoi(chr_x), stoi(chr_y)))));
 					return;
 				}
 			}
@@ -389,7 +436,7 @@ class axe
 				{
 					if (property == "key")
 					{
-						if (value.size() > 1)
+						if (value.length() > 1)
 						{
 							puts("ERROR: Invalid Character.");
 							return false;
@@ -452,7 +499,7 @@ class axe
 						{
 							visible = true;
 						}
-						chars[i].second.first = visible;
+						pixels[i].second.first = visible;
 					}
 					else if (property == "x")
 					{
@@ -464,7 +511,7 @@ class axe
 						try
 						{
 							int pos = stoi(value);
-							chars[i].second.second.first = pos;
+							pixels[i].second.second.first = pos;
 						}
 						catch (exception error)
 						{
@@ -482,7 +529,7 @@ class axe
 						try
 						{
 							int pos = stoi(value);
-							chars[i].second.second.second = pos;
+							pixels[i].second.second.second = pos;
 						}
 						catch (exception error)
 						{

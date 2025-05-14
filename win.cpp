@@ -6,6 +6,10 @@
 #include <windows.h>
 #include "axe.hpp"
 
+#if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+	#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+
 using namespace std;
 
 int prevents = 0;
@@ -47,6 +51,7 @@ int main()
 			puts(" * news [1-5] << News (Integer)");
 			puts(" * features << Engine Features");
 			puts(" * about << About Engine");
+			puts(" * donate << Donate Creator");
 			puts(" * quit << Quit Axe");
 			puts("< PROJECT ENGINE >");
 			puts(" * display [events/properties/objects/variable-name] (String)");
@@ -166,6 +171,11 @@ int main()
 			file = query + ".axe";
 			continue;
 		}
+		if (query == "donate")
+		{
+			puts("https://ry2110.itch.io/axe-donate");
+			continue;
+		}
 		if (query.compare(0, string("news ").length(), "news ") == 0)
 		{
 			query.replace(0, 4, "");
@@ -190,11 +200,34 @@ int main()
 			}
 			if (stoi(query) == 1)
 			{
-				puts("< RELEASE 1.0 >");
+				puts("< ALPHA 0.1.0 >");
 				puts(" * Created Axe Engine");
-				puts(" * Added Pixel and Character");
+				puts(" * Added Pixel, Character, Variable");
+				puts(" * Added *.axe Extension");
 				puts(" * Added First Type of Application, JIT (Just In Time)");
 				puts("NOTES: JIT Applications can run anywhere if you had Axe installed.");
+			}
+			if (stoi(query) == 2)
+			{
+				puts("< ALPHA 0.1.1 >");
+				puts(" * Fixed some Bugs");
+			}
+			if (stoi(query) == 3)
+			{
+				puts("< ALPHA 0.1.2 >");
+				puts(" * Fixed some Bugs");
+			}
+			if (stoi(query) == 4)
+			{
+				puts("< ALPHA 0.1.3 >");
+				puts(" * Fixed some Bugs");
+				puts(" * Made Peformace Faster");
+			}
+			if (stoi(query) == 5)
+			{
+				puts("< ALPHA 0.1.4 >");
+				puts(" * Fixed \"events\" and \"properties\" Option when using \"display\"");
+				puts(" * Fixed \"change\"");
 			}
 			continue;
 		}
@@ -245,46 +278,14 @@ int main()
 			}
 			if (query == "events")
 			{
-				if (object != "")
+				int i = 0;
+				for (auto event : engine.events)
 				{
-					string type;
-					bool founded = false;
-					int i;
-					for (auto pixel : engine.pixels)
-					{
-						if (object == pixel.first)
-						{
-							type = "pixel";
-							founded = true;
-							break;
-						}
-						i++;
-					}
-					if (!founded)
-					{
-						i = 0;
-						for (auto _char : engine.chars)
-						{
-							if (object == _char.first)
-							{
-								type = "char";
-								founded = true;
-								break;
-							}
-							i++;
-						}
-						if (!founded)
-						{
-							puts("ERROR: Invalid object.");
-							continue;
-						}
-					}
-					auto event = engine.events[i];
-					puts(event.first.c_str());
-					puts(event.second.c_str());
-					continue;
+					printf("ID: %i\n", i);
+					printf("EXPRESSION: %s\n", event.first.c_str());
+					printf("ACTION: %s\n", event.second.c_str());
+					i++;
 				}
-				puts("ERROR: Use of \"events\" before \"select\".");
 				continue;
 			}
 			if (query == "properties")
@@ -292,12 +293,13 @@ int main()
 				if (object != "")
 				{
 					string type = "";
-					int i;
+					int i = 0;
 					for (auto pixel : engine.pixels)
 					{
 						if (object == pixel.first)
 						{
 							type = "pixel";
+							break;
 						}
 						i++;
 					}
@@ -307,16 +309,24 @@ int main()
 						for (auto _char : engine.chars)
 						{
 							type = "char";
+							break;
 						}
 						i++;
 					}
 					if (type == "pixel")
 					{
-						auto properties = engine.pixel_properties[i];
-						printf("Name: \"%s\"\n", properties[0]);
-						printf("X: %s\n", properties[1]);
-						printf("Y: %s\n", properties[2]);
-						printf("Visible: %s\n", properties[3]);
+						auto pixel = engine.pixels[i];
+						printf("NAME: \"%s\"\n", pixel.first);
+						printf("X: %i\n", pixel.second.second.first);
+						printf("Y: %i\n", pixel.second.second.second);
+						if (pixel.second.first == true)
+						{
+							printf("VISIBLE: true\n");
+						}
+						else
+						{
+							printf("VISIBLE: false\n");
+						}
 					}
 					continue;
 				}
@@ -374,6 +384,7 @@ int main()
 				}
 			}
 			object = query;
+			engine.object = query;
 			continue;
 		}
 		if (query == "deselect")
@@ -828,6 +839,107 @@ int main()
 			}
 			continue;
 		}
+		if (query.compare(0, string("change ").length(), "change ") == 0)
+		{
+			engine.run(query);
+			continue;
+		}
+		if (query.compare(0, string("delete ").length(), "delete ") == 0)
+		{
+			query.replace(0, 7, "");
+			bool founded = false;
+			int i = 0;
+			for (auto pixel : engine.pixels)
+			{
+				if (query == pixel.first)
+				{
+					engine.pixels.erase(engine.pixels.begin() + i);
+					founded = true;
+					break;
+				}
+				i++;
+			}
+			if (founded == true)
+			{
+				continue;
+			}
+			i = 0;
+			for (auto _char : engine.chars)
+			{
+				if (query == _char.first)
+				{
+					engine.chars.erase(engine.chars.begin() + i);
+					founded = true;
+					break;
+				}
+			}
+			if (founded == true)
+			{
+				continue;
+			}
+			i = 0;
+			for (auto variable : engine.variables)
+			{
+				if (query == variable.first)
+				{
+					engine.variables.erase(engine.variables.begin() + i);
+				}
+				i++;
+			}
+			if (founded == false)
+			{
+				puts("ERROR: Invalid Pixel/Character/Variable.");
+			}
+			continue;
+		}
+		if (query == "license")
+		{
+			vector<string> lines;
+			string line;
+			int i = 0;
+			ifstream file("LICENSE.txt");
+			if (file.is_open() == false)
+			{
+				puts("ERROR: Invalid File.");
+				continue;
+			}
+			while (file.good())
+			{
+				getline(file, line);
+				lines.push_back(line);
+				i++;
+			}
+			file.close();
+			for (auto line : lines)
+			{
+				puts(line.c_str());
+			}
+			continue;
+		}
+		if (query == "license")
+		{
+			vector<string> lines;
+			string line;
+			int i = 0;
+			ifstream file("TERMS AND CONDTIONS.txt");
+			if (file.is_open() == false)
+			{
+				puts("ERROR: Invalid File.");
+				continue;
+			}
+			while (file.good())
+			{
+				getline(file, line);
+				lines.push_back(line);
+				i++;
+			}
+			file.close();
+			for (auto line : lines)
+			{
+				puts(line.c_str());
+			}
+			continue;
+		}	
 		if (query == "features")
 		{
 			puts("< FEATURES >");
