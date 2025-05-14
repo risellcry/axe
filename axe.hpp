@@ -29,6 +29,8 @@ class axe
 		string chr_x;
 		string chr_y;
 		string evt_expression;
+		int wait_used = 1;
+		int wait_float_used = 1;
 		bool in_pxls_header = false;
 		bool in_chrs_header = false;
 		bool in_vrls_header = false;
@@ -315,6 +317,7 @@ class axe
 			else if (in_sub_header == true and in_evts_header == true)
 			{
 				events.push_back(make_pair(evt_expression, command));
+				current_event++;
 				return;
 			}
 			else if (in_vrls_header == true)
@@ -545,6 +548,39 @@ class axe
 				}
 				return true;
 			}
+			if (query.compare(0, string("wait ").length(), "wait ") == 0)
+			{
+				query.replace(0, 5, "");
+				bool is_float = false;
+				if (query.find(".") != string::npos)
+				{
+					is_float = true;
+				}
+				try
+				{
+					float check = stof(query);
+				}
+				catch (exception error)
+				{
+					puts("ERROR: Invalid Integer/Float.");
+					return false;
+				}
+				if (is_float == false)
+				{
+					for (int i = 0; i < stoi(query) * (2000 * wait_used); i++)
+					{
+						wait_used++;
+					}
+				}
+				if (is_float == true)
+				{
+					for (int i = 0; i < stoi(query) * (100 * wait_float_used); i++)
+					{
+						wait_float_used++;
+					}
+				}
+				return true;
+			}
 			puts("ERROR: Invalid Query.");
 			return false;
 		}
@@ -556,18 +592,27 @@ class axe
 			while (expression.find(" ") != string::npos)
 			{
 				string token = expression;
-				token.replace(token.find(" "), token.length() + token.find(" "), "");
-				expression.replace(0, token.length() + 1, "");
+				token.replace(token.find(" "), token.length() - token.find(" "), "");
+				try
+				{
+					expression.replace(0, token.length() + 1, "");
+				}
+				catch (exception error)
+				{
+					puts("ERROR: Syntax Error for an Expression.");
+					return false;
+				}
 				tokens.push_back(token);
 				continue;
 			}
+			tokens.push_back(expression);
 			if (tokens.size() != 3)
 			{
 				puts("ERROR: Invalid Expression.");
 				return false;
 			}
-			int first_i;
-			int second_i;
+			int first_i = 0;
+			int second_i = 0;
 			int first_type = 0;
 			for (auto pixel : pixels)
 			{
@@ -665,6 +710,7 @@ class axe
 				puts("ERROR: Invalid Operator.");
 				return false;
 			}
+			puts("");
 			if (first_type == 1)
 			{
 				if (tokens[1] == "==")
@@ -722,7 +768,7 @@ class axe
 				if (tokens[1] == "!=")
 				{
 					if (chars[first_i].second.first != chars[second_i].second.first)
-					{
+					{	
 						run(action);
 					}
 				}

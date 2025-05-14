@@ -13,6 +13,6 @@ c>:(
 :
 -evts
 =b != c
-set c :)
+wait 1
 ;
 :

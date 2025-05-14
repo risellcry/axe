@@ -48,20 +48,20 @@ int main()
 			puts(" * new [project-name] << New Project (String)");
 			puts(" * open [project-name] << Open Project (String)");
 			puts(" * run [project-name] << Run Project (String)");
-			puts(" * news [1-5] << News (Integer)");
+			puts(" * news [1-6] << News (Integer)");
 			puts(" * features << Engine Features");
 			puts(" * about << About Engine");
 			puts(" * donate << Donate Creator");
 			puts(" * quit << Quit Axe");
 			puts("< PROJECT ENGINE >");
-			puts(" * display [events/properties/objects/variable-name] (String)");
+			puts(" * display [events/properties/objects/variable-name] << Display Contents (String)");
 			puts(" * select [object-name] << Select Object (String)");
-			puts(" * attach [expression]:[event] << Attach Event (Expression/Event/Integer)");
+			puts(" * attach [expression]:[action] << Attach Event (Expression/Action)");
 			puts(" * detach [event-number] << Detach Event (Integer)");
 			puts(" * save [project-name] << Save Project (String)");
 			puts(" * create [pixel/char/variable] [object-name] << Create Object (String/String)");
-			puts(" * set [variable-name] [value] (String/String)");
-			puts(" * delete [object-name] (String)");
+			puts(" * set [variable-name] [value] << Set Variable (String/String)");
+			puts(" * delete [object-name] << Delete Object (String)");
 			puts(" * change [property-name] [value] << Change Property (String/Any)");
 			puts(" * exit << Exit Application");
 			puts("< PIXEL PROPERTIES >");
@@ -72,6 +72,13 @@ int main()
 			puts(" * x << X Position [Integer(0-15)]");
 			puts(" * y << Y Position [Integer(0-15)]");
 			puts(" * key << Character Key (Character)");
+			puts("< EXPRESSION >");
+			puts("[subject] [sign] [object] << Expression");
+			puts("< ACTIONS >");
+			puts(" * set [variable-name] [value] (String/String)");
+			puts(" * select [object-name] << Select Object (String)");
+			puts(" * change [property-name] [value] << Change Property (String/Any)");
+			puts(" * wait [time] << Wait [Integer/Float]");
 			continue;
 		}
 		if (query.compare(0, string("new ").length(), "new ") == 0)
@@ -193,7 +200,7 @@ int main()
 				puts("ERROR: Invalid Integer.");
 				continue;
 			}
-			if (stoi(query) < 1 or stoi(query) > 5)
+			if (stoi(query) < 1 or stoi(query) > 6)
 			{
 				puts("ERROR: Integer is Lower than 1 or Higher than 5.");
 				continue;
@@ -228,6 +235,11 @@ int main()
 				puts("< ALPHA 0.1.4 >");
 				puts(" * Fixed \"events\" and \"properties\" Option when using \"display\"");
 				puts(" * Fixed \"change\"");
+			}
+			if (stoi(query) == 6)
+			{
+				puts("< ALPHA 0.1.5 >");
+				puts(" * Fixed if statement in runtime");
 			}
 			continue;
 		}
@@ -281,7 +293,7 @@ int main()
 				int i = 0;
 				for (auto event : engine.events)
 				{
-					printf("ID: %i\n", i);
+					printf("ID: %i\n", i + 1);
 					printf("EXPRESSION: %s\n", event.first.c_str());
 					printf("ACTION: %s\n", event.second.c_str());
 					i++;
@@ -542,9 +554,14 @@ int main()
 					puts("ERROR: Cannot compare Variable and Character.");
 					continue;
 				}
+				if (engine.current_event == 99)
+				{
+					puts("ERROR: Cannot create more than 100 events.");
+					continue;
+				}
 				engine.current_event++;
 				engine.events.push_back(make_pair(subject + " " + sign + " " + object, action));
-				printf("EXPRESSION-AND-EVENT-ID: %i\n", engine.current_event);
+				printf("EXPRESSION-AND-EVENT-ID: %i\n", engine.current_event + 1);
 				continue;
 			}
 			puts("ERROR: Attach command must had \":\" between Expression and Event.");
@@ -567,12 +584,12 @@ int main()
 				puts("ERROR: Invalid Integer.");
 				continue;
 			}
-			if (stoi(query) < -1 or stoi(query) > engine.current_event)
+			if (stoi(query) < -1 or stoi(query) - 1 > engine.current_event)
 			{
 				printf("ERROR: Integer is Lower than 0 or Higher than %i.\n", engine.current_event);
 				continue;
 			}
-			engine.events.erase(engine.events.begin() + stoi(query));
+			engine.events.erase(engine.events.begin() + stoi(query) - 1);
 			continue;
 		}
 		if (query.compare(0, string("create ").length(), "create ") == 0)
@@ -815,7 +832,7 @@ int main()
 					y++;
 					continue;
 				}
-				if (engine.current_event > 0)
+				if (engine.current_event > -1)
 				{
 					for (int i = 0; i <= 99; i++)
 					{
@@ -892,6 +909,24 @@ int main()
 			}
 			continue;
 		}
+		if (query == "exit")
+		{
+			if (file == "<NULL>")
+			{
+				puts("ERROR: Use of \"exit\" before \"new\" or \"open\".");
+				continue;
+			}
+			file = "";
+			engine.pixels.clear();
+			engine.chars.clear();
+			engine.variables.clear();
+			engine.events.clear();
+			engine.current_event = -1;
+			engine.current_pixel = -1;
+			engine.current_char = -1;
+			engine.current_variable = -1;
+			continue;
+		}
 		if (query == "license")
 		{
 			vector<string> lines;
@@ -916,7 +951,7 @@ int main()
 			}
 			continue;
 		}
-		if (query == "license")
+		if (query == "conditions")
 		{
 			vector<string> lines;
 			string line;
@@ -939,7 +974,7 @@ int main()
 				puts(line.c_str());
 			}
 			continue;
-		}	
+		}
 		if (query == "features")
 		{
 			puts("< FEATURES >");
